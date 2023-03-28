@@ -37,14 +37,13 @@ merge(meta_data,
       by = "SampleID") -> Fung_full
 
 # Constructing subtable with only root samples from Gifu
-Bac_gifu <- Bac_full[Compartment == "Root" & Genotype == "Gifu"]
-Fung_gifu <- Fung_full[Compartment == "Root" & Genotype == "Gifu"]
+Bac_gifu <- Bac_full[Compartment == "Rhizosphere" & Genotype == "Gifu"]
+Fung_gifu <- Fung_full[Compartment == "Rhizosphere" & Genotype == "Gifu"]
 
 # Computing the number of non-zero samples for each OTU
 Bac_gifu[,lapply(.SD, function(x) sum(x!= 0)),
          .SDcols = colnames(Bac_full)[-(1:4)]] %>% 
   as.matrix() -> Bac_gifu_num
-
 
 Fung_gifu[,lapply(.SD, function(x) sum(x!= 0)),
           .SDcols = colnames(Fung_gifu)[-(1:4)]] %>% 
@@ -69,8 +68,8 @@ Bac_subset <- list()
 Fung_subset <- list()
 meta_sub <- list()
 for(i in 1:5){
-  col_keep <- c("OTUid", meta_data[Compartment == "Root" & Genotype == gt[i], SampleID])
-  meta_sub[[i]] <- meta_data[Compartment == "Root" & Genotype == gt[i]]
+  col_keep <- c("OTUid", meta_data[Compartment == "Rhizosphere" & Genotype == gt[i], SampleID])
+  meta_sub[[i]] <- meta_data[Compartment == "Rhizosphere" & Genotype == gt[i]]
   Bac_subset[[i]] <- Bac[,..col_keep]
   Fung_subset[[i]] <- Fung[,..col_keep]
 }
@@ -181,11 +180,11 @@ for(i in 1:5){
 }
 
 # Constructing plot
-g1 <- ggarrange(g[[2]] + theme(legend.position = "none"), g[[4]] + theme(legend.position = "none"), nrow = 1)
-gg <- ggarrange(g[[1]], g[[3]], g[[5]], g1, common.legend = T, legend = "bottom")
+g1 <- ggarrange(g[[2]] + theme(legend.position = "none"), g[[3]] + theme(legend.position = "none"), nrow = 1)
+gg <- ggarrange(g[[1]], g[[4]], g[[5]], g1, common.legend = T, legend = "bottom")
 
-ggsave("Results and Figures/Fig5.pdf", gg, width = 200, height = 160, units = "mm")
+ggsave("Results and Figures/SFig7.pdf", gg, width = 200, height = 160, units = "mm")
 
 # Saving correlation results as table
 Cors_filt <- rbindlist(cors)
-fwrite(Cors_filt, "Results and Figures/S2 Table.csv")
+fwrite(Cors_filt, "Results and Figures/S3 Table.csv")

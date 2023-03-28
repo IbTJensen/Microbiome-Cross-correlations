@@ -124,7 +124,7 @@ All_res <- cbind(D_temp, Conf_int)
 All_res[,Estimate:=NULL]
 colnames(All_res) <- c("Family", "Correlation", "Above threshold", "Lower 2.5% CI", "Upper  2.5% CI")
 setcolorder(All_res, c("Family", "Correlation",  "Lower 2.5% CI", "Upper  2.5% CI", "Above threshold"))
-fwrite(All_res, "S1 Table.csv")
+fwrite(All_res, "Results and Figures/S1 Table.csv")
 
 # Keeping only families with confidence-intervals that do not cross 0
 CC <- Conf_int[as.character(D$Taxon),]
@@ -146,4 +146,4 @@ ggplot(data = D, aes(x = Correlation, y = Taxon, fill = Sign))+
 
 ggg <- ggarrange(g, gg, ncol = 2, widths = c(1,0.5), legend = "right")
 
-ggsave("Simulations/Figures/Fig3.pdf", ggg, width = 200, height = 190, units = "mm")
+ggsave("Results and Figures/Fig3.pdf", ggg, width = 200, height = 190, units = "mm")

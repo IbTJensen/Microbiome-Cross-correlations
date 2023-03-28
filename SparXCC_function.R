@@ -1,3 +1,5 @@
+library(limma)
+
 # Fast SparCC-derived approximation of absolute abundance variances
 Absolute_abn_var <- function(OTU.abn.log, var_min = 1e-5){
   p <- ncol(OTU.abn.log)
@@ -50,7 +52,7 @@ SparXCC <- function(OTU.abn, gene.expr, pseudo_count = 1, var_min = 1e-5){
   gene.sd <- sqrt(beta_rep)
   
   # Computing correlation approximations
-  rho <- ( pqa + pqb + qa_sum + pb_sum - t_ik )/( 2*(p*q-1)*OTU.sd*gene.sd )
+  rho <- ( pqa + pqb + qa_sum + pb_sum - t_ik )/( 2*(p-1)*(q-1)*OTU.sd*gene.sd )
   rho[abs(rho)>1] <- sign(rho[abs(rho)>1])
 
   cor.mat.est <- matrix(rho, nrow = p, ncol = q)
