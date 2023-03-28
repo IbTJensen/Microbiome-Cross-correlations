@@ -12,7 +12,7 @@ source(file = "../SparXCC_function.R")
 # Loading template
 template_OTU <- fread("Templates/OTU_template.csv")
 template_gene <- fread("Templates/Gene_template.csv")
-reps <- 200
+reps <- 500
 bio_zero <- c("Yes", "No")
 cores <- 20
 cols <- c("#1B9E77", "#E6AB02", "#D95F02", "#7570B3", "#E7298A")

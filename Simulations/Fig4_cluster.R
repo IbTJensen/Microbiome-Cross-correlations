@@ -6,7 +6,7 @@ source(file = "../cor_mat_cluster.R")
 
 # Constructing matrix with settings
 p <- c(10,20,50,100,250,500,1000)
-q <- c(1000)
+q <- c(10, 100, 1000)
 dens <- c(0.1, 0.4, 0.7)
 cor <- c(0.75)
 
@@ -123,11 +123,16 @@ R1 <- R[,.(MAE_nonzero = mean(MAE_nonzero, na.rm = T),
            MAE_zero_max = mean(MAE_zero, na.rm = T) + 1.96*sd(MAE_zero, na.rm = T)/sqrt(reps)),
         list(p, q, dens, Method, bio_zero)]
 
-R1[,dens:=paste0("c=", dens)]
-R1[,Cor_mat := "Cluster method"]
+R1[,":="(Cor_mat = "Cluster method",
+         q = factor(paste0("q=", q), levels = c("q=10", "q=100", "q=1000")))]
+
+R1_yes_main <- R1[bio_zero == "Yes" & dens == 0.1]
+R1_yes_supp <- R1[bio_zero == "Yes" & dens != 0.1]
+R1_no_main <- R1[bio_zero == "No" & dens == 0.1]
+R1_yes_supp[,dens:=paste("c", dens, sep = "=")]
 
 # Constructing and saving figures
-ggplot(data = R1[bio_zero == "Yes"], aes(x = as.factor(p), col = Method, fill = Method, group = Method))+
+ggplot(data = R1_yes_main, aes(x = as.factor(p), col = Method, fill = Method, group = Method))+
   geom_line(size = 1, aes(y = MAE_nonzero, linetype = "Non-zero"))+
   geom_line(size = 1, aes(y = MAE_zero, linetype = "Zero"))+
   geom_ribbon(alpha=0.35, aes(col = NULL, ymin = MAE_nonzero_min, ymax = MAE_nonzero_max))+
@@ -136,11 +141,12 @@ ggplot(data = R1[bio_zero == "Yes"], aes(x = as.factor(p), col = Method, fill = 
   scale_fill_manual("Method", values = cols)+
   scale_linetype_manual("Correlations",values=c("Non-zero"=1,"Zero"=2))+
   labs(x = "Number of OTUs", y = "Mean Absolute Error")+
-  facet_grid(dens ~ Cor_mat)+
+  facet_grid(q ~ Cor_mat)+
   guides(linetype = guide_legend(order = 1))+
-  theme(text = element_text(size = 10)) -> g_yes
+  theme(text = element_text(size = 10)) -> g_yes_main
 
-ggplot(data = R1[bio_zero == "No"], aes(x = as.factor(p), col = Method, fill = Method, group = Method))+
+# Supplementary figure without zero-inflation
+ggplot(data = R1_no_main, aes(x = as.factor(p), col = Method, fill = Method, group = Method))+
   geom_line(size = 1, aes(y = MAE_nonzero, linetype = "Non-zero"))+
   geom_line(size = 1, aes(y = MAE_zero, linetype = "Zero"))+
   geom_ribbon(alpha=0.35, aes(col = NULL, ymin = MAE_nonzero_min, ymax = MAE_nonzero_max))+
@@ -149,39 +155,25 @@ ggplot(data = R1[bio_zero == "No"], aes(x = as.factor(p), col = Method, fill = M
   scale_fill_manual("Method", values = cols)+
   scale_linetype_manual("Correlations",values=c("Non-zero"=1,"Zero"=2))+
   labs(x = "Number of OTUs", y = "Mean Absolute Error")+
-  facet_grid(dens ~ Cor_mat)+
+  facet_grid(q ~ Cor_mat)+
   guides(linetype = guide_legend(order = 1))+
-  theme(text = element_text(size = 10)) -> g_no
+  theme(text = element_text(size = 10)) -> g_no_main
 
-save(file = "g_yes.txt", g_yes)
-save(file = "g_no.txt", g_no)
+# Supplementary figure with all densities
+ggplot(data = R1_yes_supp, aes(x = as.factor(p), col = Method, fill = Method, group = Method))+
+  geom_line(size = 1, aes(y = MAE_nonzero, linetype = "Non-zero"))+
+  geom_line(size = 1, aes(y = MAE_zero, linetype = "Zero"))+
+  geom_ribbon(alpha=0.35, aes(col = NULL, ymin = MAE_nonzero_min, ymax = MAE_nonzero_max))+
+  geom_ribbon(alpha=0.35, aes(col = NULL, ymin = MAE_zero_min, ymax = MAE_zero_max))+
+  scale_color_manual("Method" ,values = cols)+
+  scale_fill_manual("Method", values = cols)+
+  scale_linetype_manual("Correlations",values=c("Non-zero"=1,"Zero"=2))+
+  labs(x = "Number of OTUs", y = "Mean Absolute Error")+
+  facet_grid(q ~ dens)+
+  guides(linetype = guide_legend(order = 1))+
+  theme(text = element_text(size = 10), legend.position = "bottom") -> g_supp
 
-# R2 <- R[,.(MAE_nonzero = mean(MAE_nonzero, na.rm = T),
-#            MAE_nonzero_min = mean(MAE_nonzero, na.rm = T) - 1.96*sd(MAE_nonzero, na.rm = T)/sqrt(reps),
-#            MAE_nonzero_max = mean(MAE_nonzero, na.rm = T) + 1.96*sd(MAE_nonzero, na.rm = T)/sqrt(reps),
-#            MAE_zero = mean(MAE_zero, na.rm = T),
-#            MAE_zero_min = mean(MAE_zero, na.rm = T) - 1.96*sd(MAE_zero, na.rm = T)/sqrt(reps),
-#            MAE_zero_max = mean(MAE_zero, na.rm = T) + 1.96*sd(MAE_zero, na.rm = T)/sqrt(reps)),
-#         list(p, q, dens, Method, bio_zero)]
-# 
-# R3 <- rbind(R2[,c("p", "q", "dens", "Method")], R2[,c("p", "q", "dens", "Method")])
-# R3[,":="(MAE = c(R2$MAE_nonzero, R2$MAE_zero),
-#          MAE_min = c(R2$MAE_nonzero_min, R2$MAE_zero_min),
-#          MAE_max = c(R2$MAE_nonzero_max, R2$MAE_zero_max),
-#          Cor = rep(c("Non-zero correlation", "Zero correlations"), each = nrow(R2))
-# )]
-# 
-# R3[,dens:=paste0("c=",dens)]
-# R3[,Method:=factor(Method, levels = c("CLR","None","SparXCC","TSS", "CLR+VST"))]
-# cols <- brewer.pal(n = 8, "Dark2")[-5]
-# 
-# ggplot(data = R3, aes(x = as.factor(p), y = MAE, ymin=MAE_min, ymax=MAE_max, col = Method, fill = Method, group = Method))+
-#   geom_line(size = 1)+
-#   geom_ribbon(alpha=0.35, aes(col = NULL))+
-#   scale_color_manual(values = cols)+
-#   scale_fill_manual(values = cols)+
-#   labs(x = "Number of OTUs", y = "Mean Absolute Error")+
-#   facet_grid(Cor ~ dens)+
-#   theme(text = element_text(size = 20))-> g
-# 
-# ggsave(filename = paste0("CaseC_cluster_sparse_", as.character(Sys.Date()),".pdf"), g, width = 300, height = 180, units = "mm")
+save(file = "g_yes.txt", g_yes_main)
+save(file = "g_no.txt", g_no_main)
+
+ggsave(filename = "Figures/Supp_all_dens.pdf", g_supp, width = 200, height = 160, unit = "mm")
