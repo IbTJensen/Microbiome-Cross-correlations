@@ -123,12 +123,15 @@ R1 <- R[,.(MAE_nonzero = mean(MAE_nonzero, na.rm = T),
            MAE_zero_max = mean(MAE_zero, na.rm = T) + 1.96*sd(MAE_zero, na.rm = T)/sqrt(reps)),
         list(p, q, dens, Method, bio_zero)]
 
+# R1[,dens:=paste0("c=", dens)]
+# R1[,Cor_mat := "Cluster method"]
 R1[,":="(Cor_mat = "Cluster method",
          q = factor(paste0("q=", q), levels = c("q=10", "q=100", "q=1000")))]
 
 R1_yes_main <- R1[bio_zero == "Yes" & dens == 0.1]
 R1_yes_supp <- R1[bio_zero == "Yes" & dens != 0.1]
 R1_no_main <- R1[bio_zero == "No" & dens == 0.1]
+# R1_no_supp <- R1[bio_zero == "No" & dens != 0.1]
 R1_yes_supp[,dens:=paste("c", dens, sep = "=")]
 
 # Constructing and saving figures
@@ -176,4 +179,4 @@ ggplot(data = R1_yes_supp, aes(x = as.factor(p), col = Method, fill = Method, gr
 save(file = "g_yes.txt", g_yes_main)
 save(file = "g_no.txt", g_no_main)
 
-ggsave(filename = "Figures/Supp_all_dens.pdf", g_supp, width = 200, height = 160, unit = "mm")
+ggsave(filename = "Figures/Supp_all_dens.pdf", g_supp, width = 190, height = 160, unit = "mm")

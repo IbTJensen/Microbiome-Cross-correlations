@@ -9,4 +9,5 @@ load("g.txt")
 load("g2.txt")
 
 gg <- ggarrange(g + rremove("legend"), g2 + rremove("ylab"), common.legend = T, legend = "bottom", ncol = 2, label.y = "Mean Absolute Error")
-ggsave(filename = "Figures/Fig2_CaseB.pdf", gg, width = 200, height = 160, unit = "mm")
+ggsave(filename = "Figures/Fig2_CaseB.pdf", gg, width = 190, height = 160, unit = "mm")
+ggsave(filename = "Figures/Fig2.eps", gg, width = 190, height = 160, dpi = 300, unit = "mm")

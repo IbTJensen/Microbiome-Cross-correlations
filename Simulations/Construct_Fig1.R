@@ -11,8 +11,10 @@ load("g2_yes.txt")
 load("g2_no.txt")
 
 gg_no <- ggarrange(g_no, g2_no + rremove("ylab") + rremove("legend"), common.legend = T, legend = "bottom", ncol = 2, label.y = "Mean Absolute Error")
-ggsave(filename = "Figures/SFig1_CaseB.pdf", gg_no, width = 200, height = 160, unit = "mm")
+ggsave(filename = "Figures/SFig1_CaseB.pdf", gg_no, width = 190, height = 160, unit = "mm")
+ggsave(filename = "Figures/SFig1.eps", gg_no, width = 190, height = 160, dpi = 300, unit = "mm")
 
 gg_yes <- ggarrange(g_yes, g2_yes + rremove("ylab") + rremove("legend"), common.legend = T, legend = "bottom", ncol = 2, label.y = "Mean Absolute Error")
-ggsave(filename = "Figures/Fig1_CaseB.pdf", gg_yes, width = 200, height = 160, unit = "mm")
+ggsave(filename = "Figures/Fig1_CaseB.pdf", gg_yes, width = 190, height = 160, unit = "mm")
+ggsave(filename = "Figures/Fig1.eps", gg_yes, width = 190, height = 160, dpi = 300, unit = "mm")
 

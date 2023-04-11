@@ -22,7 +22,7 @@ p <- 100
 q <- 100
 n.sim = c(20,50,200,1000)
 dens <- c(0.1)
-bio_zero <- c("Yes")
+bio_zero <- c("No", "Yes")
 cor <- c(0.75)
 
 Opt <- expand.grid(p = p, q = q, n.sim = n.sim, dens = dens, bio_zero = bio_zero, cor = cor)
@@ -31,7 +31,7 @@ Opt <- do.call("rbind", replicate(reps, Opt, simplify = FALSE))
 
 # Setting up parallelization
 my.cluster <- parallel::makeCluster(
-  20, 
+  16, 
   type = "FORK"
 )
 
@@ -136,7 +136,7 @@ R <- foreach(
   B <- rbind(mae_Cor, mae_perm, mae_spiec)
 }
 # Saving results in a csv-file
-fwrite(R, file = paste0("Results_caseC_cluster_sparse_", as.character(Sys.Date()), ".csv"))
+fwrite(R, file = "SparXCC_SPIECEASI_no.csv")
 
 # Summarizing accuracy separated by the selected simulation settings
 R2 <- R[,.(Sensitivity = mean(Sensitivity, na.rm = T),
@@ -145,7 +145,7 @@ R2 <- R[,.(Sensitivity = mean(Sensitivity, na.rm = T),
            FDR = mean(FDR, na.rm = T),
            FDR_min = mean(FDR, na.rm = T) - 1.96*sd(FDR, na.rm = T)/sqrt(reps),
            FDR_max = mean(FDR, na.rm = T) + 1.96*sd(FDR, na.rm = T)/sqrt(reps)),
-        list(p, q, dens, Method, n.sim)]
+        list(p, q, dens, Method, n.sim, bio_zero)]
 
 R4 <- rbind(R2[,c("p", "q", "n.sim", "Method")], R2[,c("p", "q", "n.sim", "Method")])
 
@@ -163,13 +163,19 @@ R4[,linetype:=ifelse(Metric == "False Discovery Rate", "solid", "dashed")]
 ggplot(data = R4, aes(x = as.factor(n.sim), y = MAE, ymin=MAE_min, ymax=MAE_max, col = Method, fill = Method, group = Method))+
   geom_line(linewidth = 1)+
   geom_ribbon(alpha=0.35, aes(col = NULL))+
-  scale_color_brewer(palette = "Dark2")+
-  scale_fill_brewer(palette = "Dark2")+
+  # scale_color_brewer(palette = "Dark2")+
+  scale_color_manual(limits = c("CLR (test)", "SparXCC (permute)","SPIEC-EASI"),
+                     values = c("#1B9E77", "#E7298A", "#B15928"))+
+  # scale_fill_brewer(palette = "Dark2")+
+  scale_fill_manual(limits = c("CLR (test)", "SparXCC (permute)","SPIEC-EASI"),
+                     values = c("#1B9E77", "#E7298A", "#B15928"))+
   labs(x = "Number of replicates", y = "Metric")+
   geom_hline(data = R4, aes(yintercept = line, linetype = linetype))+
   guides(color=guide_legend("Method"), linetype = "none")+
-  facet_wrap(~Metric, scales = "free")+
+  # facet_wrap(~Metric, scales = "free")+
+  # facet_grid(bio_zero~Metric, scales = "free")+
+  ggh4x::facet_grid2(bio_zero~Metric, scales = "free_y", independent = "y")+
   theme(text = element_text(size = 10),
-        legend.position="bottom") -> g
+        legend.position="bottom") -> g; g
 
-ggsave(filename = "Figures/SFig5.pdf", g, width = 200, height = 160, unit = "mm")
+ggsave(filename = "Figures/SFig9.pdf", g, width = 200, height = 160, unit = "mm")

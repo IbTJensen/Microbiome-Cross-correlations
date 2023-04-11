@@ -114,10 +114,13 @@ R3 <- R[,.(MAE = mean(MAE, na.rm = T),
            MAE_min = mean(MAE, na.rm = T) - 1.96*sd(MAE, na.rm = T)/sqrt(reps),
            MAE_max = mean(MAE, na.rm = T) + 1.96*sd(MAE, na.rm = T)/sqrt(reps)),
         list(p, q, Threshold, Method, bio_zero)]
+# R3[,p:=factor(paste0("p=",p), levels = c("p=10", "p=100", "p=1000"))]
+# R3[,Cor_mat := "Loadings method"]
 
 R3_yes_main <- R3[bio_zero == "Yes" & p == q]
 R3_supp <- R3[bio_zero == "Yes"]
 R3_no_main <- R3[bio_zero == "No" & p == q]
+# R1_no_supp <- R1[bio_zero == "No" & dens != 0.1]
 
 R3_yes_main[,":="(Cor_mat = "Loadings method",
                   p=factor(paste0("p=q=",p), levels = c("p=q=10", "p=q=100", "p=q=1000")),
@@ -169,4 +172,4 @@ ggplot(data = R3_supp, aes(x = Threshold, y = MAE, ymin=MAE_min, ymax=MAE_max, c
 save(file = "g2_yes.txt", g2_yes)
 save(file = "g2_no.txt", g2_no)
 
-ggsave(filename = "Figures/Supp_all_pq.pdf", g2_supp, width = 200, height = 160, unit = "mm")
+ggsave(filename = "Figures/Supp_all_pq.pdf", g2_supp, width = 190, height = 160, unit = "mm")
