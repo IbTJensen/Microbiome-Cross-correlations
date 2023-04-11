@@ -184,7 +184,7 @@ for(i in 1:5){
 g1 <- ggarrange(g[[2]] + theme(legend.position = "none"), g[[4]] + theme(legend.position = "none"), nrow = 1)
 gg <- ggarrange(g[[1]], g[[3]], g[[5]], g1, common.legend = T, legend = "bottom")
 
-ggsave("Results and Figures/Fig5.pdf", gg, width = 200, height = 160, units = "mm")
+ggsave("Results and Figures/Fig5.pdf", gg, width = 190, height = 160, units = "mm")
 
 # Saving correlation results as table
 Cors_filt <- rbindlist(cors)

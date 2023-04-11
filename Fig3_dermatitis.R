@@ -144,6 +144,7 @@ ggplot(data = D, aes(x = Correlation, y = Taxon, fill = Sign))+
                 position=position_dodge(.9))+
   NULL -> g
 
-ggg <- ggarrange(g, gg, ncol = 2, widths = c(1,0.5), legend = "right")
+ggg <- ggarrange(g, gg, ncol = 2, widths = c(1,0.5), legend = "bottom", common.legend = T)
 
-ggsave("Results and Figures/Fig3.pdf", ggg, width = 200, height = 190, units = "mm")
+ggsave("Results and Figures/Fig3.pdf", ggg, width = 190, height = 200, units = "mm")
+ggsave("Results and Figures/Fig3.eps", ggg, width = 190, height = 200, dpi = 300, units = "mm")
