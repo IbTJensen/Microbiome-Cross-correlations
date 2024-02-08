@@ -301,7 +301,7 @@ for(k in 1:nrow(Opt)){
   # FDR_CEV[k] <- mean(true.cor[p_val_adj < 0.05] == 0)
   # print( paste0("SparCEV: Power: ", Power_CEV[k], " FDR: ", FDR_CEV[k]) )
   
-  p_val_adj <- p.adjust(p_val4, method = "fdr")
+  p_val_adj <- p.adjust(p_val, method = "fdr")
   Power_CEV <- mean(p_val_adj[true.cor != 0] < 0.05)
   FDR_CEV <- mean(true.cor[p_val_adj < 0.05] == 0)
   print( paste0("SparCEV: Power: ", Power_CEV, " FDR: ", FDR_CEV) )
