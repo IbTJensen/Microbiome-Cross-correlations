@@ -137,6 +137,54 @@ SparCEV_test_full_MC <- function(OTU_table, Phenotype, B = 1000, cores = 1, lib_
   return(p_val)
 }
 
+SparCEV_test_full_MC2 <- function(OTU_table, Phenotype, B = 1000, cores = 1, lib_cut = ncol(OTU_table)*10){
+  lib_size <- rowSums(OTU_table)
+  OTU_table <- OTU_table[lib_size > lib_cut,]
+  Phenotype <- Phenotype[lib_size > lib_cut]
+  N <- min(rowSums(OTU_table))
+  OTU_table <- t(apply(OTU_table, 1 , rarefy_single_sample, N = N))
+  C <- SparCEV_cov(OTU_table, Phenotype)
+  p <- ncol(OTU_table)
+  n <- nrow(OTU_table)
+  p_val <- rep(NA, p)
+  
+  Permute_settings <- rep(1:p, B)
+  
+  if(cores == 1){
+    Permute_cov <- lapply(Permute_settings,
+                          function(i){
+                            A2 <- OTU_table
+                            A2[, i] <- A2[sample(1:n), i]
+                            cov <- SparCEV_cov_single_OTU(A2,
+                                                          Phenotype,
+                                                          i=i)
+                            return(cov)
+                          })
+  }
+  
+  if(cores > 1){
+    Permute_cov <- mclapply(Permute_settings,
+                          function(i){
+                            A2 <- OTU_table
+                            A2[, i] <- A2[sample(1:n), i]
+                            cov <- SparCEV_cov_single_OTU(A2,
+                                                          Phenotype,
+                                                          i=i)
+                            return(cov)
+                          },
+                          mc.cores = cores)
+  }
+  
+  Permute_cov_mat <- matrix(unlist(Permute_cov), p, B)
+  Distance_from_NULL_permute <- abs( Permute_cov_mat - rowMeans(Permute_cov_mat))
+  Distance_from_NULL_est <- abs( C - rowMeans(Permute_cov_mat) )
+  
+  b <- rowSums(Distance_from_NULL_permute > Distance_from_NULL_est)
+  p_val <- (b+1)/(B+1)
+  
+  return(p_val)
+}
+
 # Constructing matrix with settings
 p <- 1000
 dens <- c(0.1, 0.4, 0.7)
@@ -154,6 +202,7 @@ Opt <- do.call("rbind", replicate(reps, Opt, simplify = FALSE))
 
 Res <- data.table(Method = NA, Power = NA, FDR = NA, Opt[1,])[-1]
 
+RNGkind("L'Ecuyer-CMRG")
 set.seed(1707394915)
 for(k in 1:nrow(Opt)){
   print(k)
@@ -230,14 +279,21 @@ for(k in 1:nrow(Opt)){
   # p_val <- SparCEV_test(OTU_table = A$OTU_reads,
   #                       Phenotype = A$Phenotype,
   #                       B = 1000,
-  #                       cores = 10)
+  #                       cores = 2)
+  # Sys.time() - a
+  # 
+  # a <- Sys.time()
+  # p_val2 <- SparCEV_test_full_MC(OTU_table = A$OTU_reads,
+  #                       Phenotype = A$Phenotype,
+  #                       B = 1000,
+  #                       cores = 2)
   # Sys.time() - a
   
   # a <- Sys.time()
-  p_val <- SparCEV_test(OTU_table = A$OTU_reads,
-                        Phenotype = A$Phenotype,
-                        B = 1000,
-                        cores = 40)
+  p_val <- SparCEV_test_full_MC2(OTU_table = A$OTU_reads,
+                                  Phenotype = A$Phenotype,
+                                  B = 1000,
+                                  cores = 20)
   # Sys.time() - a
   
   # p_val_adj <- p.adjust(p_val, method = "fdr")
@@ -245,7 +301,7 @@ for(k in 1:nrow(Opt)){
   # FDR_CEV[k] <- mean(true.cor[p_val_adj < 0.05] == 0)
   # print( paste0("SparCEV: Power: ", Power_CEV[k], " FDR: ", FDR_CEV[k]) )
   
-  p_val_adj <- p.adjust(p_val, method = "fdr")
+  p_val_adj <- p.adjust(p_val4, method = "fdr")
   Power_CEV <- mean(p_val_adj[true.cor != 0] < 0.05)
   FDR_CEV <- mean(true.cor[p_val_adj < 0.05] == 0)
   print( paste0("SparCEV: Power: ", Power_CEV, " FDR: ", FDR_CEV) )
@@ -271,6 +327,9 @@ colnames(Res_temp2)[6:8] <- c("Measure", "Lower", "Upper")
 Res_summary_long <- rbind(Res_temp1, Res_temp2)
 
 Res_summary_long[,dens:=paste0("c=", dens)]
+
+fwrite(Res_summary_long, "Res_summary_long.csv")
+fwrite(Res, "Res.csv")
 
 ggplot(data = Res_summary_long, aes(x = as.factor(n.sim),
                                     y = Measure,
