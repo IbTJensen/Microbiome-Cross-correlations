@@ -186,16 +186,16 @@ SparCEV_test_full_MC2 <- function(OTU_table, Phenotype, B = 1000, cores = 1, lib
 }
 
 # Constructing matrix with settings
-p <- 1000
-dens <- c(0.1, 0.4, 0.7)
+p <- c(100, 250, 1000)
+dens <- 0.1
 cor <- 0.75
 bio_zero <- "No"
 
 # Defining other simulation settings
-n.sim <- c(20, 50, 100, 500)
+n.sim <- c(20, 50, 200, 1000)
 phenotype_var <- 1
 
-reps <- 50
+reps <- 25
 
 Opt <- expand.grid(p = p, dens = dens, bio_zero = bio_zero, cor = cor, n.sim = n.sim)
 Opt <- do.call("rbind", replicate(reps, Opt, simplify = FALSE))
@@ -239,7 +239,7 @@ for(k in 1:nrow(Opt)){
   OTU_CLR <- t(apply(OTU_TSS, 1, clr))
   
   # Test log-TSS
-  p_val_log <- sapply(1:p, function(i) cor.test(log(A$OTU_reads[,i]+1), A$Phenotype)$p.value)
+  p_val_log <- sapply(1:Opt[k,"p"], function(i) cor.test(log(A$OTU_reads[,i]+1), A$Phenotype)$p.value)
   p_val_log_adj <- p.adjust(p_val_log, method = "fdr")
   Power_log <- mean(p_val_log_adj[true.cor != 0] < 0.05)
   FDR_log <- mean(true.cor[p_val_log_adj < 0.05] == 0)
@@ -251,7 +251,7 @@ for(k in 1:nrow(Opt)){
                                Opt[k,]))
   
   # Test log-TSS
-  p_val_TSS <- sapply(1:p, function(i) cor.test(log(OTU_TSS[,i]), A$Phenotype)$p.value)
+  p_val_TSS <- sapply(1:Opt[k,"p"], function(i) cor.test(log(OTU_TSS[,i]), A$Phenotype)$p.value)
   p_val_TSS_adj <- p.adjust(p_val_TSS, method = "fdr")
   Power_TSS <- mean(p_val_TSS_adj[true.cor != 0] < 0.05)
   FDR_TSS <- mean(true.cor[p_val_TSS_adj < 0.05] == 0)
@@ -263,7 +263,7 @@ for(k in 1:nrow(Opt)){
                                Opt[k,]))
   
   # Test CLR
-  p_val_clr <- sapply(1:p, function(i) cor.test(OTU_CLR[,i], A$Phenotype)$p.value)
+  p_val_clr <- sapply(1:Opt[k,"p"], function(i) cor.test(OTU_CLR[,i], A$Phenotype)$p.value)
   p_val_clr_adj <- p.adjust(p_val_clr, method = "fdr")
   Power_CLR <- mean(p_val_clr_adj[true.cor != 0] < 0.05)
   FDR_CLR <- mean(true.cor[p_val_clr_adj < 0.05] == 0)
@@ -293,7 +293,7 @@ for(k in 1:nrow(Opt)){
   p_val <- SparCEV_test_full_MC2(OTU_table = A$OTU_reads,
                                   Phenotype = A$Phenotype,
                                   B = 1000,
-                                  cores = 20)
+                                  cores = 40)
   # Sys.time() - a
   
   # p_val_adj <- p.adjust(p_val, method = "fdr")
@@ -312,6 +312,8 @@ for(k in 1:nrow(Opt)){
                                Opt[k,]))
 }
 
+fwrite(Res, "Res.csv")
+
 Res[is.na(FDR),FDR:=0]
 Res[,.(FDR = mean(FDR), Power = mean(Power),
        FDR_lower = mean(FDR) - sd(FDR)*sqrt(reps),
@@ -326,10 +328,9 @@ colnames(Res_temp1)[6:8] <- c("Measure", "Lower", "Upper")
 colnames(Res_temp2)[6:8] <- c("Measure", "Lower", "Upper")
 Res_summary_long <- rbind(Res_temp1, Res_temp2)
 
-Res_summary_long[,dens:=paste0("c=", dens)]
-
 fwrite(Res_summary_long, "Res_summary_long.csv")
-fwrite(Res, "Res.csv")
+
+Res_summary_long[,p:=paste0("p = ", dens)]
 
 ggplot(data = Res_summary_long, aes(x = as.factor(n.sim),
                                     y = Measure,
@@ -343,7 +344,7 @@ ggplot(data = Res_summary_long, aes(x = as.factor(n.sim),
   scale_fill_brewer(" Method", palette = "Dark2")+
   # scale_linetype_manual("Correlations",values=c("Non-zero"=1,"Zero"=2))+
   labs(x = "Number of replicates", y = NULL)+
-  facet_grid(Type ~ dens, switch = "y")+
+  facet_grid(p ~ Type, switch = "y")+
   guides(linetype = guide_legend(order = 1))+
   theme(legend.position = "bottom")+
   theme(text = element_text(size = 10)) -> g
