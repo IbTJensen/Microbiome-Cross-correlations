@@ -123,7 +123,7 @@ ggplot(data = A, aes(x = SparCEV, y = TSS))+
   geom_abline(slope = 1, intercept = 0)+
   theme(text = element_text(size = 10),
         axis.title = element_text(size = 9))+
-  labs(x = "SparCEV iterative", y = "log-TSS")+
+  labs(x = "Compositional correlation", y = "Naive correlation")+
   NULL -> p3
 
 ggplot(data = A, aes(x = SparCEV, y = SparCEV_base))+
@@ -192,6 +192,15 @@ D_temp <- data.table(Taxon = colnames(Taxon_data)[-1],
                      Upper = CI_upper)
 D <- D_temp[order(Correlation, decreasing = T)]
 
+D_temp[Taxon %in% c("Staphylococcaceae", "Breznakiellaceae", "Kosmotogaceae",
+                    "Malasseziaceae", "Ustilaginaceae", "Marasmiaceae",
+                    "Desulfotomaculaceae", "Methanomicrobiaceae",
+                    "Caldilineaceae", "Pycnococcaceae", "Verrucomicrobiaceae",
+                    "Coleofasciculaceae", "Jonesiaceae", "Trueperaceae",
+                    "Hyphomicrobiaceae")] -> D_temp2
+D_temp2 <- D_temp2[order(Correlation)]
+D_temp2[,Taxon:=factor(Taxon, levels = Taxon)]
+
 # Keeping only OTUs with correlation above the permutation threshold
 D <- D[Significance == T]
 D <- D[sign(Lower) == sign(Upper)]
@@ -214,7 +223,24 @@ ggplot(data = D, aes(x = Correlation, y = Taxon, fill = Sign))+
   expand_limits(x = 1)+
   NULL -> g
 
+# Constructing figure
+ggplot(data = D_temp2, aes(x = Correlation, y = Taxon))+
+  geom_bar(stat="identity", fill = "#1B9E77")+
+  theme(text = element_text(size = 10),
+        axis.title = element_text(size = 9))+
+  # scale_x_continuous(breaks = c(0,0.2,0.4,0.6,0.8,1),
+  #                    minor_breaks = seq(0,0.9,0.1))+
+  labs(x = "Estimate", y = NULL)+
+  geom_errorbar(aes(xmin=Lower, xmax=Upper), width=.2,
+                position=position_dodge(.9))+
+  expand_limits(x = 1)+
+  expand_limits(x = -1)+
+  NULL -> g
+
 ggg <- ggarrange(g, gg, ncol = 2, widths = c(1,0.5), legend = "bottom", common.legend = T, labels = c("A", NULL))
 
-ggsave("../Main figures/Fig3.pdf", ggg, width = 190, height = 200, units = "mm")
-
+# ggsave("../Main figures/Fig3.pdf", ggg, width = 190, height = 200, units = "mm")
+ggsave("~/OneDrive/[04] Misc./[03] Presentations/LSS 2025/images/AD_cors.pdf",
+       g, width = 160, height = 120, units = "mm")
+ggsave("~/OneDrive/[04] Misc./[03] Presentations/LSS 2025/images/TSS_SparCEV.pdf",
+       p3, width = 160, height = 120, units = "mm")
