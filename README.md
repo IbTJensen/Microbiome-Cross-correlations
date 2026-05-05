@@ -1,5 +1,5 @@
 # Microbiome-Cross-correlations
-Repository of code and implementation for the paper "Estimation of cross-correlations involving microbiome communities: A comparison between novel and transformation-based procedures", currently unpublished, available on BioRxiv here: https://www.biorxiv.org/content/10.1101/2023.05.22.538214v1.
+Repository of code and implementation for the paper "Estimation of cross-correlations involving microbiome communities: A comparison between novel and transformation-based procedures", published in PLOS One, available on BioRxiv [here](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0305032).
 
 The methods SparCEV and SparXCC are available in the R-package CompoCor, which can be found here: https://github.com/IbTJensen/CompoCor
 
